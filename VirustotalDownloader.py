@@ -43,9 +43,13 @@ class VirustotalDownloader(Responder):
 
                 kind = filetype.guess(f.name)
 
-                if kind.extension != None:
+                if kind:
                     os.rename(f.name, f.name + "." + kind.extension)
                     filename = f.name + "." + kind.extension
+                    tags = ['src:VirusTotal', str(kind.mime), str(kind.extension), 'parent:' + self.get_param('data.data')]
+                else:
+                    filename = f.name
+                    tags = ['src:VirusTotal', 'parent:' + self.get_param('data.data')]
 
                 api = TheHiveApi(self.thehive_url, self.thehive_apikey)
 
@@ -53,7 +57,7 @@ class VirustotalDownloader(Responder):
                         data=[filename],
                         tlp=self.get_param('data.tlp'),
                         ioc=True,
-                        tags=['src:VirusTotal', str(kind.mime), str(kind.extension), 'parent:' + self.get_param('data.data')],
+                        tags=tags
                         message=''
                         )
 
@@ -61,7 +65,7 @@ class VirustotalDownloader(Responder):
 
                 self.report({'message': str(response.status_code)})
             else:
-               self.report({'message': 'Virustotal returned the following error code: ' + str(response.status_code) + ". If you receive 403 this means that $
+               self.report({'message': 'Virustotal returned the following error code: ' + str(response.status_code) + ". If you receive 403 this means that you are using the free API instead of the premium API."})
         else:
             self.error('Incorrect dataType. "Hash" expected.')
 
